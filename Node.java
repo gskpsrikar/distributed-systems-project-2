@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 public class Node {
 
     int NODE_ID = -1;
-    String HOST_NAME;
+    String HOST_NAME = Utils.getHostName();
     int NUMBER_OF_NODES;
     int EXPECTED_INTER_REQUEST_DELAY;
     int EXPECTED_CS_EXECUTION_TIME;
@@ -20,7 +20,8 @@ public class Node {
     Map<Integer, Integer> ID_TO_PORT_MAP = new HashMap<>();
 
     public Node(){
-        this.HOST_NAME = Utils.getHostName();
+        this.parseConfiguationFile();
+        this.repr();
     }
 
     public static void main(String[] args) throws UnknownHostException{
