@@ -6,30 +6,63 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import com.sun.nio.sctp.*;
 
 public class Node {
 
     int NODE_ID = -1;
     String HOST_NAME = Utils.getHostName();
+    
     int NUMBER_OF_NODES;
     int EXPECTED_INTER_REQUEST_DELAY;
     int EXPECTED_CS_EXECUTION_TIME;
     int REQUESTS_PER_NODE;
+
     Map<Integer, String> ID_TO_HOST_MAP = new HashMap<>();
     Map<String, Integer> HOST_TO_ID_MAP = new HashMap<>();
     Map<Integer, Integer> ID_TO_PORT_MAP = new HashMap<>();
+    Map<Integer, SctpChannel> ID_TO_CHANNEL_MAP = new HashMap<>();
 
     public Node(){
         this.parseConfiguationFile();
-        this.repr();
+        this.displayNodeDetails();
+        
     }
 
     public static void main(String[] args) throws UnknownHostException{
         Node node = new Node();
         node.parseConfiguationFile();
-        node.repr();
+        node.displayNodeDetails();
+        node.runApplication();
     }
-    
+
+    public void runApplication(){
+        while (this.REQUESTS_PER_NODE > 0){
+            if (this.REQUESTS_PER_NODE % 100 == 0){
+                System.out.println(
+                    String.format(
+                        "[%s] Remaining number of requests to be made = %d", 
+                        Utils.currentTime(), 
+                        this.REQUESTS_PER_NODE
+                    )
+                );
+            }
+
+            int interRequestDelay = Utils.generateExponentialRandomVariable(this.EXPECTED_INTER_REQUEST_DELAY);
+            Utils.sleep(interRequestDelay);
+
+            MutualExclusionService.csEnter();
+
+            int executionTime = Utils.generateExponentialRandomVariable(1/this.EXPECTED_CS_EXECUTION_TIME);
+            Utils.sleep(executionTime);
+
+            MutualExclusionService.csLeave();
+
+            this.REQUESTS_PER_NODE -= 1;
+        }
+    }
+
+    // Utility methods
     public void parseConfiguationFile() {
         String CONFIG_FILENAME = Utils.getConfigFilePath();
         Pattern GLOBAL_VARIABLES_REGEX_PATTERN = Pattern.compile("^\\s*(\\d+)\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)");
@@ -80,12 +113,16 @@ public class Node {
                 }
             }
 
+            this.ID_TO_CHANNEL_MAP = Utils.buildChannels(
+                this.NODE_ID, this.ID_TO_PORT_MAP, this.ID_TO_HOST_MAP
+            );
+
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private void repr(){
+    private void displayNodeDetails(){
         System.out.println("--------------------- CONFIGURATION ----------------------------");
         System.out.println(String.format("| NODE_ID : %d", this.NODE_ID));
         System.out.println(String.format("| HOST_NAME: %s", this.HOST_NAME));
@@ -95,6 +132,7 @@ public class Node {
         System.out.println(String.format("| REQUESTS_PER_NODE: %d", this.REQUESTS_PER_NODE));
         System.out.println("| ID_TO_HOST_MAP: "+this.ID_TO_HOST_MAP);
         System.out.println("| ID_TO_PORT_MAP: "+this.ID_TO_PORT_MAP);
+        System.out.println("| ID_TO_CHANNEL_MAP: "+this.ID_TO_CHANNEL_MAP);
         System.out.println("----------------------------------------------------------------");
     }
 }
