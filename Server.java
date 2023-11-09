@@ -7,10 +7,12 @@ public class Server {
     private int PORT;
     private int MAX_MSG_SIZE = 4096;
     private Node node;
+    private MutualExclusionService mutex;
 
-    public Server(Node node) {
+    public Server(MutualExclusionService mutex, Node node) {
         this.PORT = node.ID_TO_PORT_MAP.get(node.NODE_ID);
         this.node = node;
+        this.mutex = mutex;
     }
 
     public void listen() throws Exception {
@@ -43,6 +45,10 @@ public class Server {
     }
 
     public void handleMessage(Message msg) throws Exception{
-        
+        if (msg.messageType == MessageType.REQUEST){
+            mutex.receiveRequest(msg.SENDER_ID, msg.SENDER_CLOCK);
+        } else if (msg.messageType == MessageType.REPLY){
+            mutex.receiveReply(msg.SENDER_ID);
+        }
     }
 }

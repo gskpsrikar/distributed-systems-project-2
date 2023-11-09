@@ -15,11 +15,27 @@ The nodes are setup on the UTD's Computer Science Department cluster.
 - ```Main.java``` - This is the file we enter using the launcher script.
   - In *public static void main* method, create the following objects - Node (node), MutualExclusion (mutex)
   - In a new thread, create a Server (to lister to messages) and pass the mutex object to it.
-  - In a new thread, call node.runApplication(mE)
+  - In a new thread, call node.runApplication(mutex)
 
 - ```Server.java```
   - Runs on a separate thread.
   - Handle incoming messages. Requires the mutex object. Send received reply to mutex.receiveReply().
+
+
+## Roucairol-Carvalho Protocol
+Pi on receiving a CS REQUEST message from Pj with timestamp Cj.
+- If there is no outstanding request at Pi, REPLY to Pj.
+- If Pi is in CS, add to queue Pj's request to Pi's queue.
+- If Pi has an outstanding request and Pi is not in CS:
+   - If Ci < Cj, then add to queue (defer).
+   - Else, REPLY to Pj. Then, send REQUEST to Pj.
+
+Pi on receiving a CS REPLY message from Pj.
+- de
+
+Pi on csExit(), do:
+- If there is another process request on top of queue, send REPLY.
+  - While doing this, if there is an outstanding request send a REQUEST message too.
 
 ## Output File format
 <pid, csRequestTime, csEnterTime, csExitTime, messageCount>

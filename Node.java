@@ -23,6 +23,8 @@ public class Node {
     Map<Integer, Integer> ID_TO_PORT_MAP = new HashMap<>();
     Map<Integer, SctpChannel> ID_TO_CHANNEL_MAP = new HashMap<>();
 
+    MutualExclusionService mutex;
+
     public Node(){
         this.parseConfiguationFile();
         this.displayNodeDetails();
@@ -51,12 +53,12 @@ public class Node {
             int interRequestDelay = Utils.generateExponentialRandomVariable(this.EXPECTED_INTER_REQUEST_DELAY);
             Utils.sleep(interRequestDelay);
 
-            MutualExclusionService.csEnter();
+            mutex.csEnter();
 
             int executionTime = Utils.generateExponentialRandomVariable(1/this.EXPECTED_CS_EXECUTION_TIME);
             Utils.sleep(executionTime);
 
-            MutualExclusionService.csLeave();
+            mutex.csLeave();
 
             this.REQUESTS_PER_NODE -= 1;
         }

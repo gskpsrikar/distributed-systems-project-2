@@ -10,7 +10,7 @@ import java.util.Random;
 
 import com.sun.nio.sctp.*;
 
-enum MessageType {APPLICATION};
+enum MessageType {REQUEST, REPLY};
 
 public class Utils {
 
@@ -99,7 +99,7 @@ public class Utils {
     public static void displayMessageDetails(Message msg, int hostId){
         // Display the message details on screen for debugging purposes
         String sendingOrReceiving = "";
-        if (msg.sourceId == hostId){
+        if (msg.SENDER_ID == hostId){
             sendingOrReceiving = "Sending";
         } else {
             sendingOrReceiving = "Receiving";
@@ -108,8 +108,12 @@ public class Utils {
         System.out.println(
             String.format(
                 "[%s] (%s) FROM:%d TO:%d TYPE:%s", 
-                currentTime(), sendingOrReceiving, msg.sourceId, msg.destinationId, msg.messageType
+                currentTime(), sendingOrReceiving, msg.SENDER_ID, msg.DESTINATION_ID, msg.messageType
             )
         );
+    }
+
+    public static void sendMessage(Message msg, SctpChannel channel){
+        
     }
 }

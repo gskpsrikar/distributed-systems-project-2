@@ -1,6 +1,5 @@
 import java.io.Serializable;
 import java.nio.ByteBuffer;
-import java.util.Vector;
 
 import java.io.ObjectOutputStream;
 import java.io.ObjectInputStream;
@@ -8,16 +7,18 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
 
-
 public class Message implements Serializable {
 
-    public MessageType messageType;
-    public int sourceId;
-    public int destinationId;
+    public MessageType messageType; // REQUEST, REPLY
+    public int SENDER_ID;
+    public int DESTINATION_ID;
+	public int SENDER_CLOCK;
 	
-	public Message(int senderId, Vector<Integer> timestamp, String message)
+	public Message(int senderId, int destinationID, int clock)
 	{
-		// Contructor for application message
+		this.SENDER_ID = senderId;
+		this.DESTINATION_ID = destinationID;
+		this.SENDER_CLOCK = clock;
 	}
 
 
