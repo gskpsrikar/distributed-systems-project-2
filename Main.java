@@ -13,8 +13,8 @@ public class Main {
         initiateServerThread(mutex, node);
         
         try {
-            System.out.println("Sleeping for 5 seconds to allow other nodes wake other nodes...");
-            Thread.sleep(5000);
+            System.out.println("Sleeping for 10 seconds to allow other nodes wake other nodes...");
+            Thread.sleep(10000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

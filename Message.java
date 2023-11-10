@@ -6,7 +6,6 @@ import java.io.ObjectInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
-enum MessageType {REQUEST, REPLY};
 
 public class Message implements Serializable {
 
@@ -37,8 +36,6 @@ public class Message implements Serializable {
 	// Retrieve Message from ByteBuffer received from SCTP
 	public static Message fromByteBuffer(ByteBuffer buf) throws Exception
 	{
-		// Buffer needs to be flipped before reading
-		// Buffer flip should happen only once
 		buf.flip();
 		byte[] data = new byte[buf.limit()];
 		buf.get(data);
