@@ -13,8 +13,6 @@ import java.util.Random;
 
 import com.sun.nio.sctp.*;
 
-enum MessageType {REQUEST, REPLY};
-
 public class Utils {
 
     static String LOCAL_CONFIG_PATH = "config.txt";

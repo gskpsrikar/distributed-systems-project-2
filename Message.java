@@ -6,6 +6,7 @@ import java.io.ObjectInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
+enum MessageType {REQUEST, REPLY};
 
 public class Message implements Serializable {
 

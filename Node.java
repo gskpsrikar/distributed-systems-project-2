@@ -26,16 +26,19 @@ public class Node {
     MutualExclusionService mutex;
 
     public Node(){
-        this.parseConfiguationFile();
-        this.displayNodeDetails();
-        
+        this.parseConfiguationFile();        
     }
 
     public static void main(String[] args) throws UnknownHostException{
         Node node = new Node();
         node.parseConfiguationFile();
-        node.displayNodeDetails();
         node.runApplication();
+    }
+
+    public void buildChannels() {
+        this.ID_TO_CHANNEL_MAP = Utils.buildChannels(
+                this.NODE_ID, this.ID_TO_PORT_MAP, this.ID_TO_HOST_MAP
+            );
     }
 
     public void runApplication(){
@@ -133,16 +136,12 @@ public class Node {
                 }
             }
 
-            this.ID_TO_CHANNEL_MAP = Utils.buildChannels(
-                this.NODE_ID, this.ID_TO_PORT_MAP, this.ID_TO_HOST_MAP
-            );
-
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private void displayNodeDetails(){
+    public void displayNodeDetails(){
         System.out.println("--------------------- CONFIGURATION ----------------------------");
         System.out.println(String.format("| NODE_ID : %d", this.NODE_ID));
         System.out.println(String.format("| HOST_NAME: %s", this.HOST_NAME));
