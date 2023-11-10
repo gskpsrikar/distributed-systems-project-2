@@ -20,7 +20,11 @@ public class Main {
         }
 
         node.buildChannels();
+        mutex.ID_TO_CHANNEL_MAP = node.ID_TO_CHANNEL_MAP;
+        
         node.displayNodeDetails();
+
+        node.runApplication();
     }
 
     private static void initiateServerThread(MutualExclusionService mutex, Node node) {

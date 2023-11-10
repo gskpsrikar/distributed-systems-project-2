@@ -116,7 +116,7 @@ public class Utils {
 
     public static void writeCriticalSectionDetails(String csvContent, int nCriticalSections){
         
-        String filePath = String.format("output_%d.csv", nCriticalSections);
+        String filePath = String.format("output.csv", nCriticalSections);
 
         try {
             FileWriter fileWriter = new FileWriter(filePath, true);

@@ -122,8 +122,13 @@ public class MutualExclusionService {
         MessageInfo messageInfo = MessageInfo.createOutgoing(null, 0);
         SctpChannel channel = this.ID_TO_CHANNEL_MAP.get(to);
 
+        System.out.println(to);
+        System.out.println(this.ID_TO_CHANNEL_MAP);
+        System.out.println(msg);
+
         try {
             byte[] messageBytes = msg.toMessageBytes();
+
             channel.send(ByteBuffer.wrap(messageBytes), messageInfo);
         } catch (Exception e) {
             e.printStackTrace();
