@@ -53,15 +53,33 @@ public class Node {
             int interRequestDelay = Utils.generateExponentialRandomVariable(this.EXPECTED_INTER_REQUEST_DELAY);
             Utils.sleep(interRequestDelay);
 
-            mutex.csEnter();
+            String csRequestTimestamp = Utils.currentTimestamp();
 
-            int executionTime = Utils.generateExponentialRandomVariable(1/this.EXPECTED_CS_EXECUTION_TIME);
-            Utils.sleep(executionTime);
+            int numberOfMessagesExchanged = mutex.csEnter();
+
+            criticalSection(csRequestTimestamp, numberOfMessagesExchanged);
 
             mutex.csLeave();
 
             this.REQUESTS_PER_NODE -= 1;
         }
+    }
+
+    public void criticalSection(String csRequestTimestamp, int numberOfMessagesExchanged){
+        
+        String csStartTimestamp = Utils.currentTimestamp();
+
+        int executionTime = Utils.generateExponentialRandomVariable(1/this.EXPECTED_CS_EXECUTION_TIME);
+        Utils.sleep(executionTime);
+
+        String csFinishTimestamp = Utils.currentTimestamp();
+
+        String csvString = String.format(
+            "%d,%s,%s,%s,%d\n", 
+            this.NODE_ID, csRequestTimestamp, csStartTimestamp, csFinishTimestamp, numberOfMessagesExchanged
+        );
+
+        Utils.writeCriticalSectionDetails(csvString, this.REQUESTS_PER_NODE);
     }
 
     // Utility methods

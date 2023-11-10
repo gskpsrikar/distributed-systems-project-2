@@ -44,11 +44,13 @@ public class MutualExclusionService {
         this.ID_TO_CHANNEL_MAP = idToChannelMap;
     }
 
-    public void csEnter(){
+    public int csEnter(){
 
         // TODO: Add the REQUEST to its queue.
 
         this.OUTSTANDING = true;
+
+        int messageComplexity = this.NUMBER_OF_NODES - this.keysHolding;
 
         for (int i=0; i<this.NUMBER_OF_NODES; i++){
             if (! this.keys[i]){
@@ -63,7 +65,7 @@ public class MutualExclusionService {
 
         this.clock ++;
 
-        return;
+        return 2*messageComplexity;
     }
 
     public void csLeave(){

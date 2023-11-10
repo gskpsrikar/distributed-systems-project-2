@@ -1,9 +1,12 @@
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -113,7 +116,23 @@ public class Utils {
         );
     }
 
-    public static void sendMessage(Message msg, SctpChannel channel){
+    public static void writeCriticalSectionDetails(String csvContent, int nCriticalSections){
         
+        String filePath = String.format("output_%d.csv", nCriticalSections);
+
+        try {
+            FileWriter fileWriter = new FileWriter(filePath, true);
+            fileWriter.write(csvContent);
+            fileWriter.close();
+        } catch (IOException e) {
+            System.err.println("An error occurred while writing the file.");
+            e.printStackTrace();
+        }
+    }
+
+    public static String currentTimestamp(){
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String timestamp = formatter.format(new Date());
+        return timestamp;
     }
 }
