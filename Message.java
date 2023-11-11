@@ -13,12 +13,15 @@ public class Message implements Serializable {
     public int SENDER_ID;
     public int DESTINATION_ID;
 	public int SENDER_CLOCK;
+	public int MESSAGE_ID;
 	
 	public Message(int senderId, int destinationID, int clock)
 	{
 		this.SENDER_ID = senderId;
 		this.DESTINATION_ID = destinationID;
 		this.SENDER_CLOCK = clock;
+
+		this.MESSAGE_ID = Utils.generateMessageId();
 	}
 
 

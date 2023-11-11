@@ -16,7 +16,8 @@ public class Node {
     int NUMBER_OF_NODES;
     int EXPECTED_INTER_REQUEST_DELAY;
     int EXPECTED_CS_EXECUTION_TIME;
-    int REQUESTS_PER_NODE;
+    int REQUESTS_TO_BE_SATISFIED;
+    int REQUESTS_SATISFIED = 0;
 
     Map<Integer, String> ID_TO_HOST_MAP = new HashMap<>();
     Map<String, Integer> HOST_TO_ID_MAP = new HashMap<>();
@@ -42,13 +43,13 @@ public class Node {
     }
 
     public void runApplication(){
-        while (this.REQUESTS_PER_NODE > 0){
-            if (this.REQUESTS_PER_NODE % 100 == 0){
+        while (this.REQUESTS_TO_BE_SATISFIED > this.REQUESTS_SATISFIED){
+            if (this.REQUESTS_SATISFIED % 100 == 0){
                 System.out.println(
                     String.format(
                         "[%s] Remaining number of requests to be made = %d", 
-                        Utils.currentTime(), 
-                        this.REQUESTS_PER_NODE
+                        Utils.currentTimestamp(), 
+                        this.REQUESTS_TO_BE_SATISFIED - this.REQUESTS_SATISFIED
                     )
                 );
             }
@@ -58,21 +59,26 @@ public class Node {
 
             String csRequestTimestamp = Utils.currentTimestamp();
 
+            System.out.println(Utils.currentTimestamp() + " | Making Critical Section Enter Request");
             int numberOfMessagesExchanged = mutex.csEnter();
 
             criticalSection(csRequestTimestamp, numberOfMessagesExchanged);
-
+            
+            System.out.println(Utils.currentTimestamp() + " | Making Critical Section Leave Request");
             mutex.csLeave();
 
-            this.REQUESTS_PER_NODE -= 1;
+            this.REQUESTS_SATISFIED ++;
         }
     }
 
     public void criticalSection(String csRequestTimestamp, int numberOfMessagesExchanged){
+
+        System.out.println("Node "+this.NODE_ID+" entered critical section.");
         
         String csStartTimestamp = Utils.currentTimestamp();
 
         int executionTime = Utils.generateExponentialRandomVariable(1/this.EXPECTED_CS_EXECUTION_TIME);
+
         Utils.sleep(executionTime);
 
         String csFinishTimestamp = Utils.currentTimestamp();
@@ -82,7 +88,9 @@ public class Node {
             this.NODE_ID, csRequestTimestamp, csStartTimestamp, csFinishTimestamp, numberOfMessagesExchanged
         );
 
-        Utils.writeCriticalSectionDetails(csvString, this.REQUESTS_PER_NODE);
+        Utils.writeCriticalSectionDetails(csvString, this.REQUESTS_TO_BE_SATISFIED);
+
+        System.out.println("Node "+this.NODE_ID+" is exiting critical section.");
     }
 
     // Utility methods
@@ -110,7 +118,7 @@ public class Node {
                     this.NUMBER_OF_NODES = n;
                     this.EXPECTED_INTER_REQUEST_DELAY = Integer.parseInt(globalMatcher.group(2));
                     this.EXPECTED_CS_EXECUTION_TIME = Integer.parseInt(globalMatcher.group(3));
-                    this.REQUESTS_PER_NODE = Integer.parseInt(globalMatcher.group(4));
+                    this.REQUESTS_TO_BE_SATISFIED = Integer.parseInt(globalMatcher.group(4));
 
                     validLineNumber += 1;
 
@@ -148,7 +156,7 @@ public class Node {
         System.out.println(String.format("| NUMBER_OF_NODES: %d", this.NUMBER_OF_NODES));
         System.out.println(String.format("| EXPECTED_INTER_REQUEST_DELAY: %d", this.EXPECTED_INTER_REQUEST_DELAY));
         System.out.println(String.format("| EXPECTED_CS_EXECUTION_TIME: %d", this.EXPECTED_CS_EXECUTION_TIME));
-        System.out.println(String.format("| REQUESTS_PER_NODE: %d", this.REQUESTS_PER_NODE));
+        System.out.println(String.format("| REQUESTS_TO_BE_SATISFIED: %d", this.REQUESTS_TO_BE_SATISFIED));
         System.out.println("| ID_TO_HOST_MAP: "+this.ID_TO_HOST_MAP);
         System.out.println("| ID_TO_PORT_MAP: "+this.ID_TO_PORT_MAP);
         System.out.println("| ID_TO_CHANNEL_MAP: "+this.ID_TO_CHANNEL_MAP);

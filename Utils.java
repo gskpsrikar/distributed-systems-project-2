@@ -3,9 +3,8 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,16 +33,17 @@ public class Utils {
     public static void sleep(int duration){
         // Sleep for the specified duration
         try {
+            System.out.println("Sleeping for "+duration+" ms.");
             Thread.sleep(duration);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
 
-    public static String currentTime(){
-        LocalDateTime currentDateTime = LocalDateTime.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        String formattedDateTime = currentDateTime.format(formatter);
+    public static String currentTimestamp(){
+        Date date = new Date();
+        DateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+        String formattedDateTime = sdf.format(date);
         return formattedDateTime;
     }
 
@@ -108,15 +108,15 @@ public class Utils {
 
         System.out.println(
             String.format(
-                "[%s] (%s) FROM:%d TO:%d TYPE:%s", 
-                currentTime(), sendingOrReceiving, msg.SENDER_ID, msg.DESTINATION_ID, msg.messageType
+                "%d - [%s] (%s) FROM:%d TO:%d TYPE:%s", 
+                msg.MESSAGE_ID, currentTimestamp(), sendingOrReceiving, msg.SENDER_ID, msg.DESTINATION_ID, msg.messageType
             )
         );
     }
 
-    public static void writeCriticalSectionDetails(String csvContent, int nCriticalSections){
-        
-        String filePath = String.format("output.csv", nCriticalSections);
+    public static void writeCriticalSectionDetails(String csvContent, int nRequestsToBeSatisfied){
+
+        String filePath = String.format("output_%d.csv", nRequestsToBeSatisfied);
 
         try {
             FileWriter fileWriter = new FileWriter(filePath, true);
@@ -128,9 +128,17 @@ public class Utils {
         }
     }
 
-    public static String currentTimestamp(){
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        String timestamp = formatter.format(new Date());
-        return timestamp;
+    public static int generateMessageId() {
+        Random random = new Random();
+
+        int threeDigitNumber = 100 + random.nextInt(900);
+
+        return threeDigitNumber;
+    }
+
+    public static void handleKeysCountError(int k){
+        if (k < 1){
+            throw new AssertionError("Assertion Error: Keys count became less than 1.");
+        }
     }
 }

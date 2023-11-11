@@ -15,8 +15,10 @@ public class MutualExclusionService {
         }
     };
 
-    private boolean OUTSTANDING = false;
-    private boolean IN_CRITICAL_SECTION = false;
+    // Outstanding request and critical section details
+    private boolean isOutstandingRequest = false;
+    private int clockOutstandingRequest;
+    private boolean inCriticalSection = false;
 
     private PriorityQueue<int[]> queue = new PriorityQueue<>(comparator);
     private int NODE_ID;
@@ -30,102 +32,123 @@ public class MutualExclusionService {
     public MutualExclusionService(int nodeId, int numberOfNodes, Map<Integer, SctpChannel> idToChannelMap){
         this.NODE_ID = nodeId;
         this.NUMBER_OF_NODES = numberOfNodes;
-
         this.keys = new boolean[this.NUMBER_OF_NODES];
         for (int i=0; i < this.NUMBER_OF_NODES; i++){
             if (i < this.NODE_ID){
                 this.keys[i] = false;
             } else {
                 this.keys[i] = true;
-                this.keysHolding ++;
+                this.keysHolding += 1;
             }
         }
-
         this.ID_TO_CHANNEL_MAP = idToChannelMap;
     }
 
     public int csEnter(){
+        System.out.println("Called csEnter() method.");
 
-        // TODO: Add the REQUEST to its queue.
+        this.isOutstandingRequest = true;
+        this.clockOutstandingRequest = this.clock;
 
-        this.OUTSTANDING = true;
+        int messageComplexity = 2 * (this.NUMBER_OF_NODES - this.keysHolding);
 
-        int messageComplexity = this.NUMBER_OF_NODES - this.keysHolding;
-
-        for (int i=0; i<this.NUMBER_OF_NODES; i++){
+        for (int i=0; i<this.NUMBER_OF_NODES; i++){ // Send REQUESTs to unpossesed keys
             if (! this.keys[i]){
                 sendRequestOrReply(i, MessageType.REQUEST);
             }
         }
 
         while (this.keysHolding < this.NUMBER_OF_NODES){
+            // try {
+            //     Thread.sleep(10000);
+            // } catch (InterruptedException e) {
+            //     e.printStackTrace();
+            // }
+            // displayState(-1);
         }
 
-        this.IN_CRITICAL_SECTION = true;
+        System.out.println("Exiting csEnter() method.");
 
-        this.clock ++;
-
-        return 2*messageComplexity;
+        this.inCriticalSection = true;
+        return messageComplexity;
     }
 
     public void csLeave(){
-        // TODO: Remove the request which is just satisfied from the queue.
-        // Check the correctness of the logic with others.
+        System.out.println("Entering csLeave() method.");
 
-        this.IN_CRITICAL_SECTION = false;
-
-        this.OUTSTANDING = false;
+        this.inCriticalSection = false;
+        this.isOutstandingRequest = false;
 
         while (!this.queue.isEmpty()){
 
-            int[] element = this.queue.peek();
+            int[] element = this.queue.poll();
             int requestedNodeId = element[1];
 
-            if (requestedNodeId == this.NODE_ID){
-                break;
-            }
-
-            sendRequestOrReply(element[1], MessageType.REPLY);
-
-            this.keys[requestedNodeId] = false;
-            this.keysHolding --;
-
-            if (this.OUTSTANDING){
-                sendRequestOrReply(element[1], MessageType.REQUEST);
-            }
-
+            sendRequestOrReply(requestedNodeId, MessageType.REPLY);
         }
+        System.out.println("Exiting csLeave() method.");
     }
 
-    public void receiveReply(int from){
-        this.keys[from] = true;
+    public void receiveReply(Message msg){
+        System.out.println("-------------------");
+
+        displayState(msg.MESSAGE_ID);
+
+        Utils.displayMessageDetails(msg, this.NODE_ID);
+
+        this.clock = Math.max(msg.SENDER_CLOCK, this.clock) + 1;
+
+        this.keys[msg.SENDER_ID] = true;
         this.keysHolding ++;
+
+        displayState(msg.MESSAGE_ID);
+
+        System.out.println("-------------------");
     }
 
-    public void receiveRequest(int from, int clock){
-        if (this.IN_CRITICAL_SECTION | this.OUTSTANDING){
-            this.queue.add(new int[]{clock, from});
+    public void receiveRequest(Message msg){
+        System.out.println("-------------------");
+        displayState(msg.MESSAGE_ID);
+
+        Utils.displayMessageDetails(msg, this.NODE_ID);
+
+        this.clock = Math.max(msg.SENDER_CLOCK, this.clock) + 1;
+
+        if (this.inCriticalSection){
+            this.queue.add(new int[]{msg.SENDER_CLOCK, msg.SENDER_ID});
+        } else if (! this.isOutstandingRequest){
+            sendRequestOrReply(msg.SENDER_ID, MessageType.REPLY);
         } else {
-            sendRequestOrReply(from,MessageType.REPLY);
+            if (this.clockOutstandingRequest <= msg.SENDER_CLOCK){
+                this.queue.add(new int[]{msg.SENDER_CLOCK, msg.SENDER_ID});
+            } else {
+                sendRequestOrReply(msg.SENDER_ID, MessageType.REPLY);
+                sendRequestOrReply(msg.SENDER_ID, MessageType.REQUEST);
+            }
         }
+
+        displayState(msg.MESSAGE_ID);
+        System.out.println("-------------------");
     }
 
-    public void sendRequestOrReply(int to, MessageType messageType){
-        Message msg = new Message(this.NODE_ID, to, this.clock);
-        msg.messageType = messageType;
+    public void sendRequestOrReply(int destination, MessageType messageType){
+        // Send a REQUEST or REPLY to a target node
 
-        if (messageType == MessageType.REPLY){
-            this.keys[to] = false;
-            this.keysHolding --;
+        this.clock ++; // Update the clock before a send event
+
+        Message msg = new Message(this.NODE_ID, destination, this.clock);
+        msg.messageType = messageType;
+        displayState(msg.MESSAGE_ID);
+        Utils.displayMessageDetails(msg, this.NODE_ID);
+
+        if (messageType == MessageType.REPLY){ // For REPLY message, delete the key
+            this.keys[destination] = false;
+            this.keysHolding -= 1;
+            Utils.handleKeysCountError(this.keysHolding);
         }
 
         MessageInfo messageInfo = MessageInfo.createOutgoing(null, 0);
-        SctpChannel channel = this.ID_TO_CHANNEL_MAP.get(to);
-
-        System.out.println(to);
-        System.out.println(this.ID_TO_CHANNEL_MAP);
-        System.out.println(msg);
-
+        SctpChannel channel = this.ID_TO_CHANNEL_MAP.get(destination);
         try {
             byte[] messageBytes = msg.toMessageBytes();
 
@@ -133,5 +156,17 @@ public class MutualExclusionService {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        displayState(msg.MESSAGE_ID);
+    }
+
+    public void displayState(int messageId){
+        String display = "";
+        display += messageId + " - State: ("+this.keysHolding+" keys) ";
+        
+        for (int i=0; i < this.keys.length; i++){
+            display += this.keys[i] + ", ";
+        }
+
+        System.out.println(display + " | queue: " + this.queue);
     }
 }

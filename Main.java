@@ -13,7 +13,7 @@ public class Main {
         initiateServerThread(mutex, node);
         
         try {
-            System.out.println("Sleeping for 10 seconds to allow other nodes wake other nodes...");
+            System.out.println("Sleeping for 10 seconds to allow other nodes wake up...");
             Thread.sleep(10000);
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -21,6 +21,13 @@ public class Main {
 
         node.buildChannels();
         mutex.ID_TO_CHANNEL_MAP = node.ID_TO_CHANNEL_MAP;
+
+        try {
+            System.out.println("Sleeping for 10 seconds to allow other nodes build channels...");
+            Thread.sleep(10000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         
         node.displayNodeDetails();
 
