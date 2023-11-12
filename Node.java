@@ -67,7 +67,7 @@ public class Node {
             System.out.println(Utils.currentTimestamp() + " | Making Critical Section Leave Request");
             mutex.csLeave();
 
-            this.REQUESTS_SATISFIED ++;
+            this.REQUESTS_SATISFIED += 1;
         }
     }
 
@@ -77,7 +77,7 @@ public class Node {
         
         String csStartTimestamp = Utils.currentTimestamp();
 
-        int executionTime = Utils.generateExponentialRandomVariable(1/this.EXPECTED_CS_EXECUTION_TIME);
+        int executionTime = Utils.generateExponentialRandomVariable(this.EXPECTED_CS_EXECUTION_TIME);
 
         Utils.sleep(executionTime);
 
@@ -88,7 +88,7 @@ public class Node {
             this.NODE_ID, csRequestTimestamp, csStartTimestamp, csFinishTimestamp, numberOfMessagesExchanged
         );
 
-        Utils.writeCriticalSectionDetails(csvString, this.REQUESTS_TO_BE_SATISFIED);
+        Utils.writeCriticalSectionDetails(csvString, this.NUMBER_OF_NODES, this.EXPECTED_CS_EXECUTION_TIME, this.REQUESTS_TO_BE_SATISFIED);
 
         System.out.println("Node "+this.NODE_ID+" is exiting critical section.");
     }

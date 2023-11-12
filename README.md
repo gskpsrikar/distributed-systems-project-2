@@ -70,8 +70,15 @@ ssh sxs210570@dc01.utdallas.edu
 cd distributed-systems-project-2
 ```
 #### SCP
-```scp -r ./distributed-systems-project-2/ sxs210570@csjaws.utdallas.edu:.```
-
+```
+scp -r ./distributed-systems-project-2/ sxs210570@csjaws.utdallas.edu:.
+```
+#### Testing
+```
+- cd OneDrive/Documents/Coursework/Fall2023/CS6378 Advanced Operating Systems/
+- conda activate py310-nlp
+- jupyter notebook
+```
 ## References
 - [Cloning Private Repository from Github Using Personal Token](https://www.youtube.com/watch?v=rzgtnS04MXE)
   - Refer this but use 'fine grained access' feature that is provided in GitHub developer settings.

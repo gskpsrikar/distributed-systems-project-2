@@ -25,3 +25,4 @@ replay_pid*
 
 Test.java
 *.csv
+config_files/*

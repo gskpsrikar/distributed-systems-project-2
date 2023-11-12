@@ -33,7 +33,7 @@ public class Utils {
     public static void sleep(int duration){
         // Sleep for the specified duration
         try {
-            System.out.println("Sleeping for "+duration+" ms.");
+            // System.out.println("Sleeping for "+duration+" ms.");
             Thread.sleep(duration);
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -97,7 +97,7 @@ public class Utils {
         return localhost;
     };
 
-    public static void displayMessageDetails(Message msg, int hostId){
+    public static void displayMessageDetails(Message msg, int hostId, int hostClock){
         // Display the message details on screen for debugging purposes
         String sendingOrReceiving = "";
         if (msg.SENDER_ID == hostId){
@@ -108,15 +108,16 @@ public class Utils {
 
         System.out.println(
             String.format(
-                "%d - [%s] (%s) FROM:%d TO:%d TYPE:%s", 
-                msg.MESSAGE_ID, currentTimestamp(), sendingOrReceiving, msg.SENDER_ID, msg.DESTINATION_ID, msg.messageType
+                "%d - [%s] (%s) FROM:%d TO:%d TYPE:%s | C(sender)=%d | C(self)=%d", 
+                msg.MESSAGE_ID, currentTimestamp(), sendingOrReceiving, msg.SENDER_ID, msg.DESTINATION_ID, msg.messageType,
+                msg.SENDER_CLOCK, hostClock
             )
         );
     }
 
-    public static void writeCriticalSectionDetails(String csvContent, int nRequestsToBeSatisfied){
+    public static void writeCriticalSectionDetails(String csvContent, int nNodes, int csExecutionTime, int nRequestsToBeSatisfied){
 
-        String filePath = String.format("output_%d.csv", nRequestsToBeSatisfied);
+        String filePath = String.format("experiments/output_%d_%d_%d.csv", nNodes, csExecutionTime, nRequestsToBeSatisfied);
 
         try {
             FileWriter fileWriter = new FileWriter(filePath, true);

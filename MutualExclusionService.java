@@ -48,23 +48,21 @@ public class MutualExclusionService {
         System.out.println("Called csEnter() method.");
 
         this.isOutstandingRequest = true;
-        this.clockOutstandingRequest = this.clock;
+        int val = this.clock;
+        this.clockOutstandingRequest = val;
 
         int messageComplexity = 2 * (this.NUMBER_OF_NODES - this.keysHolding);
 
-        for (int i=0; i<this.NUMBER_OF_NODES; i++){ // Send REQUESTs to unpossesed keys
-            if (! this.keys[i]){
-                sendRequestOrReply(i, MessageType.REQUEST);
+        synchronized (this.keys) {
+            for (int i=0; i<this.NUMBER_OF_NODES; i++){ // Send REQUESTs to unpossesed keys
+                if (! this.keys[i]){
+                    sendRequestOrReply(i, MessageType.REQUEST);
+                }
             }
         }
 
         while (this.keysHolding < this.NUMBER_OF_NODES){
-            // try {
-            //     Thread.sleep(10000);
-            // } catch (InterruptedException e) {
-            //     e.printStackTrace();
-            // }
-            // displayState(-1);
+            Utils.sleep(10  );
         }
 
         System.out.println("Exiting csEnter() method.");
@@ -79,72 +77,104 @@ public class MutualExclusionService {
         this.inCriticalSection = false;
         this.isOutstandingRequest = false;
 
-        while (!this.queue.isEmpty()){
+        this.clock += 1;
 
-            int[] element = this.queue.poll();
-            int requestedNodeId = element[1];
+        synchronized (this.queue){
+            while (!this.queue.isEmpty()){
 
-            sendRequestOrReply(requestedNodeId, MessageType.REPLY);
+                int[] element = this.queue.poll();
+                int requestedNodeId = element[1];
+
+                sendRequestOrReply(requestedNodeId, MessageType.REPLY);
+            }
         }
+        
         System.out.println("Exiting csLeave() method.");
     }
 
     public void receiveReply(Message msg){
         System.out.println("-------------------");
 
-        displayState(msg.MESSAGE_ID);
+        synchronized(this.queue){displayState(msg.MESSAGE_ID);};
 
-        Utils.displayMessageDetails(msg, this.NODE_ID);
+        Utils.displayMessageDetails(msg, this.NODE_ID, this.clock);
 
-        this.clock = Math.max(msg.SENDER_CLOCK, this.clock) + 1;
-
-        this.keys[msg.SENDER_ID] = true;
-        this.keysHolding ++;
-
-        displayState(msg.MESSAGE_ID);
+        // this.clock = Math.max(msg.SENDER_CLOCK, this.clock) + 1;
+        synchronized (this.keys){
+            this.keys[msg.SENDER_ID] = true;
+            this.keysHolding ++;
+        }
+        
+        synchronized(this.queue){displayState(msg.MESSAGE_ID);};
 
         System.out.println("-------------------");
     }
 
     public void receiveRequest(Message msg){
         System.out.println("-------------------");
-        displayState(msg.MESSAGE_ID);
+        synchronized(this.queue){displayState(msg.MESSAGE_ID);};
 
-        Utils.displayMessageDetails(msg, this.NODE_ID);
+        Utils.displayMessageDetails(msg, this.NODE_ID, this.clock);
 
-        this.clock = Math.max(msg.SENDER_CLOCK, this.clock) + 1;
+        System.out.println(String.format("OutstandingRequest=%b - OutstandingRequestClock=%d - inCriticalSection=%b", 
+        this.isOutstandingRequest, this.clockOutstandingRequest, this.inCriticalSection
+        ));
+
+        // this.clock = Math.max(msg.SENDER_CLOCK, this.clock) + 1;
 
         if (this.inCriticalSection){
-            this.queue.add(new int[]{msg.SENDER_CLOCK, msg.SENDER_ID});
+            synchronized (this.queue){
+                this.queue.add(new int[]{msg.SENDER_CLOCK, msg.SENDER_ID});
+            }
         } else if (! this.isOutstandingRequest){
             sendRequestOrReply(msg.SENDER_ID, MessageType.REPLY);
         } else {
             if (this.clockOutstandingRequest <= msg.SENDER_CLOCK){
-                this.queue.add(new int[]{msg.SENDER_CLOCK, msg.SENDER_ID});
+
+                if (this.clockOutstandingRequest < msg.SENDER_CLOCK){
+                    synchronized (this.queue){
+                        this.queue.add(new int[]{msg.SENDER_CLOCK, msg.SENDER_ID});
+                    }
+                } else if (this.NODE_ID < msg.SENDER_ID) {
+                    synchronized (this.queue){
+                        this.queue.add(new int[]{msg.SENDER_CLOCK, msg.SENDER_ID});
+                    }
+                } else {
+                    sendRequestOrReply(msg.SENDER_ID, MessageType.REPLY);
+                    sendRequestOrReply(msg.SENDER_ID, MessageType.REQUEST);
+                }
             } else {
                 sendRequestOrReply(msg.SENDER_ID, MessageType.REPLY);
                 sendRequestOrReply(msg.SENDER_ID, MessageType.REQUEST);
             }
         }
 
-        displayState(msg.MESSAGE_ID);
+        synchronized(this.queue){displayState(msg.MESSAGE_ID);};
         System.out.println("-------------------");
     }
 
     public void sendRequestOrReply(int destination, MessageType messageType){
-        // Send a REQUEST or REPLY to a target node
+        // this.clock ++; // Update the clock before a send event
 
-        this.clock ++; // Update the clock before a send event
+        Message msg; 
 
-        Message msg = new Message(this.NODE_ID, destination, this.clock);
+        if (messageType == MessageType.REQUEST){
+            msg = new Message(this.NODE_ID, destination, this.clockOutstandingRequest);
+        } else {
+            msg = new Message(this.NODE_ID, destination, this.clock);
+        }
+
         msg.messageType = messageType;
-        displayState(msg.MESSAGE_ID);
-        Utils.displayMessageDetails(msg, this.NODE_ID);
 
-        if (messageType == MessageType.REPLY){ // For REPLY message, delete the key
-            this.keys[destination] = false;
-            this.keysHolding -= 1;
-            Utils.handleKeysCountError(this.keysHolding);
+        synchronized(this.queue){displayState(msg.MESSAGE_ID);};
+        Utils.displayMessageDetails(msg, this.NODE_ID, this.clock);
+
+        synchronized (this.keys) {
+            if (messageType == MessageType.REPLY){ // For REPLY message, delete the key
+                this.keys[destination] = false;
+                this.keysHolding -= 1;
+                Utils.handleKeysCountError(this.keysHolding);
+            }
         }
 
         MessageInfo messageInfo = MessageInfo.createOutgoing(null, 0);
@@ -156,7 +186,8 @@ public class MutualExclusionService {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        displayState(msg.MESSAGE_ID);
+
+        synchronized(this.queue){displayState(msg.MESSAGE_ID);};
     }
 
     public void displayState(int messageId){
@@ -166,7 +197,11 @@ public class MutualExclusionService {
         for (int i=0; i < this.keys.length; i++){
             display += this.keys[i] + ", ";
         }
+        display += " | Queue: ";
 
-        System.out.println(display + " | queue: " + this.queue);
+        for (int[] element : this.queue){
+            display += String.format("[%d,%d],", element[0], element[1]);
+        }
+        System.out.println(display);
     }
 }
