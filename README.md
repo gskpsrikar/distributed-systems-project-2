@@ -1,4 +1,5 @@
 # Distributed Systems Project-2: Roucairol and Carvalho's Distributed Mutual Exclusion Protocol
+This project implements a distributed system consisting of n nodes, numbered 0 to n − 1, arranged in an arbitrary topology. The topology and information about other parameters are provided in a configuration file.
 
 The nodes are setup on the UTD's Computer Science Department cluster.
 
@@ -10,7 +11,7 @@ The nodes are setup on the UTD's Computer Science Department cluster.
    - A Queue to handle requests.
    - csEnter(): Send key-requests to all required processes. Then wait until all keys are received.
    - csLeave(): 
-   - receiveReply(): 
+   - receiveReply(): Accepts rept messages
 
 - ```Main.java``` - This is the file we enter using the launcher script.
   - In *public static void main* method, create the following objects - Node (node), MutualExclusion (mutex)
@@ -23,15 +24,16 @@ The nodes are setup on the UTD's Computer Science Department cluster.
 
 
 ## Roucairol-Carvalho Protocol
-Pi on receiving a CS REQUEST message from Pj with timestamp Cj.
+Pi on receiving a critical section REQUEST message from Pj with timestamp Cj.
 - If there is no outstanding request at Pi, REPLY to Pj.
-- If Pi is in CS, add to queue Pj's request to Pi's queue.
+- If Pi is in critical section, add to queue Pj's request to Pi's queue.
 - If Pi has an outstanding request and Pi is not in CS:
    - If Ci < Cj, then add to queue (defer).
    - Else, REPLY to Pj. Then, send REQUEST to Pj.
 
-Pi on receiving a CS REPLY message from Pj.
-- de
+Pi on receiving a critical section REPLY message from Pj.
+- If all keys from Pi's neighbors are present with Pi, then enter critical section.
+
 
 Pi on csExit(), do:
 - If there is another process request on top of queue, send REPLY.

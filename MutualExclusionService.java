@@ -61,7 +61,7 @@ public class MutualExclusionService {
             }
         }
 
-        while (this.keysHolding < this.NUMBER_OF_NODES){
+        while (this.keysHolding < this.NUMBER_OF_NODES / 2){
             Utils.sleep(10  );
         }
 
