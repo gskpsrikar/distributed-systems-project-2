@@ -46,7 +46,7 @@ Pi on csExit(), do:
 ## Frequently used Linux commands
 #### SSH into control node from MobaXterm:
 ```
-ssh sxs210570@csjaws.utdallas.edu
+ssh xxxxxxxxx@csjaws.utdallas.edu
 ```
 (Use PuTTy if you are doing it from Windows)
 
@@ -62,7 +62,7 @@ git clone https://xxx_ACCESS_KEY_HERE_xxx@github.com/gskpsrikar/distributed-syst
 
 #### SSH into dcxx machines
 ```
-ssh sxs210570@dc01.utdallas.edu
+ssh xxxxxxxxx@dc01.utdallas.edu
 ```
 
 #### "cd" into the project repository in the terminal
@@ -73,7 +73,7 @@ cd distributed-systems-project-2
 ```
 #### SCP
 ```
-scp -r ./distributed-systems-project-2/ sxs210570@csjaws.utdallas.edu:.
+scp -r ./distributed-systems-project-2/ xxxxxxxxx@csjaws.utdallas.edu:.
 ```
 #### Testing
 ```
